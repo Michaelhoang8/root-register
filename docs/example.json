@@ -1,0 +1,14 @@
+{
+  "coefficients": [
+    -2,
+    -1,
+    0,
+    1
+  ],
+  "left": 1,
+  "right": 2,
+  "start": 1,
+  "maxSteps": 80,
+  "xTolerance": 1e-10,
+  "fTolerance": 1e-10
+}

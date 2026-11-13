@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Root Register — Numerical field notes</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <strong>r/r</strong><span>NUMERICAL FIELD NOTES — 053</span
+      ><button id="export">Export evidence ↗</button>
+    </header>
+    <main>
+      <section class="intro">
+        <p>FINDING ZERO</p>
+        <h1>Close is a<br />measurable thing.</h1>
+        <div>
+          <h2>Root Register</h2>
+          <p>
+            Four methods. One polynomial.<br />Follow the steps—and the
+            assumptions.
+          </p>
+        </div>
+      </section>
+      <section class="controls">
+        <label
+          >Study<select id="preset">
+            <option value="custom" disabled>Custom study</option>
+            <option value="cubic">A well-behaved cubic</option>
+            <option value="cycle">Newton's two-point cycle</option>
+            <option value="double">An even-multiplicity root</option>
+            <option value="flat">A nearly flat starting point</option>
+          </select></label
+        ><label
+          >Inspect method<select id="method">
+            <option value="bisection">Bisection</option>
+            <option value="newton">Newton</option>
+            <option value="secant">Secant</option>
+            <option value="safeguarded">Safeguarded Newton</option>
+          </select></label
+        ><button id="save">Save study</button
+        ><button id="open">Open study</button
+        ><input id="file" type="file" accept=".json" hidden />
+      </section>
+      <p id="message" role="status" aria-live="polite"></p>
+      <div class="workspace">
+        <section>
+          <div class="plot-title">
+            <h2>Function &amp; iterates</h2>
+            <span id="formula"></span>
+          </div>
+          <svg
+            id="plot"
+            viewBox="0 0 800 440"
+            role="img"
+            aria-label="Polynomial curve and current root estimate"
+          ></svg>
+          <div class="transport">
+            <button id="back" aria-label="Previous iterate">←</button
+            ><button id="play">Play</button
+            ><button id="next" aria-label="Next iterate">→</button
+            ><input
+              id="step"
+              type="range"
+              value="0"
+              min="0"
+              aria-label="Iteration"
+            /><output id="position"></output>
+          </div>
+          <p class="note">
+            Plot covers the supplied interval. Escaping iterates remain in the
+            trace; the plot never implies they are inside it.
+          </p>
+        </section>
+        <aside>
+          <p class="eyebrow" id="method-name"></p>
+          <h2 id="status"></h2>
+          <p id="reason"></p>
+          <dl id="metrics"></dl>
+          <p id="step-kind"></p>
+        </aside>
+      </div>
+      <section>
+        <div class="plot-title">
+          <h2>Compare the outcomes</h2>
+          <span>Same polynomial, independent runs</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Outcome</th>
+                <th>Last x</th>
+                <th>|f(x)|</th>
+                <th>Evaluations</th>
+              </tr>
+            </thead>
+            <tbody id="comparison"></tbody>
+          </table>
+        </div>
+      </section>
+      <details>
+        <summary>Change the experiment</summary>
+        <form id="settings">
+          <label class="wide"
+            >Coefficients, constant first<input
+              id="coefficients"
+              required
+              placeholder="-2, -1, 0, 1" /></label
+          ><label
+            >Left endpoint<input
+              id="left"
+              type="number"
+              step="any"
+              min="-1000"
+              max="1000"
+              required /></label
+          ><label
+            >Right endpoint<input
+              id="right"
+              type="number"
+              step="any"
+              min="-1000"
+              max="1000"
+              required /></label
+          ><label
+            >Newton start<input
+              id="start"
+              type="number"
+              step="any"
+              min="-1000"
+              max="1000"
+              required /></label
+          ><label
+            >Update budget<input
+              id="maxSteps"
+              type="number"
+              min="1"
+              max="200"
+              required /></label
+          ><label
+            >x tolerance<input
+              id="xTolerance"
+              type="number"
+              step="any"
+              min="1e-14"
+              max=".01"
+              required /></label
+          ><label
+            >Residual tolerance<input
+              id="fTolerance"
+              type="number"
+              step="any"
+              min="1e-14"
+              max=".01"
+              required /></label
+          ><button type="submit">Recalculate all methods</button>
+        </form>
+      </details>
+      <details>
+        <summary>Iteration ledger</summary>
+        <button id="csv">Download traces CSV</button>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>x</th>
+                <th>f(x)</th>
+                <th>Derivative</th>
+                <th>Δx</th>
+                <th>Step</th>
+              </tr>
+            </thead>
+            <tbody id="ledger"></tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>Reading the evidence</summary>
+        <p>
+          Bisection and safeguarded Newton require opposite endpoint signs
+          unless an endpoint evaluates to zero. A polynomial is continuous, but
+          floating-point cancellation can make computed signs unreliable. This
+          tool does not use interval arithmetic and does not certify every root.
+        </p>
+        <p>
+          A small residual does not bound the distance to a root, especially
+          near a flat or repeated root. Bracket termination returns the
+          midpoint. Newton can diverge or cycle; secant can encounter equal
+          function values. Safeguarded Newton accepts a Newton proposal only in
+          the inner 80% of the current bracket, otherwise bisecting. It is not
+          Brent's method.
+        </p>
+        <p>
+          Coefficients are constant first, degree 1–8, bounded by one million.
+          Input x values are within ±1000; numerical excursions beyond ±10¹²
+          stop the affected method. The update budget is at most 200. Data stays
+          in your browser unless exported.
+        </p>
+      </details>
+      <footer>
+        <span>ROOT REGISTER</span><span>Small steps, explicit evidence.</span>
+      </footer>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
