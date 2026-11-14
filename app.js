@@ -18,6 +18,10 @@ const fmt = (x) =>
       : Math.abs(x) < 0.0001 || Math.abs(x) > 1e6
         ? x.toExponential(6)
         : Number(x.toPrecision(10)).toString();
+function message(text) {
+  $("message").textContent = text;
+  $("settings-status").textContent = text;
+}
 function stop() {
   clearInterval(timer);
   timer = null;
@@ -44,17 +48,71 @@ function draw(run, row) {
     curve = report.curve,
     maxY = Math.max(1e-12, ...curve.map((p) => Math.abs(p.value))),
     X = (x) => 50 + ((x - left) / (right - left)) * 700,
-    Y = (y) => 220 - (y / maxY) * 175;
-  let svg = `<line class="axis" x1="50" y1="220" x2="750" y2="220"/><text x="50" y="418">${fmt(left)}</text><text x="690" y="418">${fmt(right)}</text><text x="12" y="30">f(x), ±${fmt(maxY)}</text>`;
-  if (row?.left !== null && row?.left !== undefined)
-    svg += `<rect class="bracket" x="${X(row.left)}" y="40" width="${Math.max(0, X(row.right) - X(row.left))}" height="350"/>`;
-  svg += `<path class="curve" d="${curve.map((p, i) => `${i ? "L" : "M"}${X(p.x).toFixed(3)},${Y(p.value).toFixed(3)}`).join(" ")}"/>`;
-  if (row && row.x >= left && row.x <= right && Math.abs(row.f) <= maxY * 1.05)
-    svg += `<line class="marker" x1="${X(row.x)}" x2="${X(row.x)}" y1="40" y2="390"/><circle class="point" cx="${X(row.x)}" cy="${Y(row.f)}" r="7"/>`;
-  else if (row)
-    svg +=
-      '<text x="50" y="385">Current iterate is outside the plot range.</text>';
-  $("plot").innerHTML = svg;
+    Y = (y) => 220 - (y / maxY) * 175,
+    plot = $("plot"),
+    signature = JSON.stringify(report.input);
+  if (plot.dataset.signature !== signature) {
+    plot.dataset.signature = signature;
+    const grid =
+      Array.from(
+        { length: 9 },
+        (_, i) =>
+          `<line class="grid" x1="${50 + i * 87.5}" x2="${50 + i * 87.5}" y1="40" y2="390"/>`,
+      ).join("") +
+      Array.from(
+        { length: 5 },
+        (_, i) =>
+          `<line class="grid" x1="50" x2="750" y1="${45 + i * 87.5}" y2="${45 + i * 87.5}"/>`,
+      ).join("");
+    plot.innerHTML = `<defs><clipPath id="plot-clip"><rect x="50" y="40" width="700" height="350"/></clipPath></defs>${grid}<line class="axis" x1="50" y1="220" x2="750" y2="220"/><text x="50" y="418">${fmt(left)}</text><text x="690" y="418">${fmt(right)}</text><text x="12" y="25">f(x), ±${fmt(maxY)}</text><g clip-path="url(#plot-clip)"><rect id="active-bracket" class="bracket" y="40" height="350"/><path class="curve" d="${curve.map((p, i) => `${i ? "L" : "M"}${X(p.x).toFixed(3)},${Y(p.value).toFixed(3)}`).join(" ")}"/><line id="construction" class="construction"/><line id="iterate-marker" class="marker" x1="0" x2="0" y1="40" y2="390"/><circle id="iterate-halo" class="point-halo" cx="0" cy="0" r="16"/><circle id="iterate-point" class="point" cx="0" cy="0" r="6"/></g><text id="plot-note" x="50" y="385"></text>`;
+  }
+  const bracket = $("active-bracket"),
+    hasBracket = row?.left !== null && row?.left !== undefined;
+  bracket.style.display = hasBracket ? "" : "none";
+  if (hasBracket) {
+    bracket.style.x = `${X(row.left)}px`;
+    bracket.style.width = `${Math.max(0, X(row.right) - X(row.left))}px`;
+  }
+  const visible =
+    row && row.x >= left && row.x <= right && Math.abs(row.f) <= maxY * 1.05;
+  for (const id of ["iterate-point", "iterate-halo", "iterate-marker"])
+    $(id).style.display = visible ? "" : "none";
+  if (visible) {
+    for (const id of ["iterate-point", "iterate-halo"])
+      $(id).style.transform = `translate(${X(row.x)}px,${Y(row.f)}px)`;
+    $("iterate-marker").style.transform = `translateX(${X(row.x)}px)`;
+  }
+  const construction = $("construction");
+  const previous = run.rows[step - 1];
+  const slope =
+    run.method === "newton" || run.method === "safeguarded"
+      ? row?.derivative
+      : run.method === "secant" && previous && row && row.x !== previous.x
+        ? (row.f - previous.f) / (row.x - previous.x)
+        : null;
+  const yLeft = row && slope !== null ? Y(row.f + slope * (left - row.x)) : NaN,
+    yRight = row && slope !== null ? Y(row.f + slope * (right - row.x)) : NaN;
+  const showConstruction =
+    visible &&
+    Number.isFinite(yLeft) &&
+    Number.isFinite(yRight) &&
+    Math.abs(yLeft) < 1e12 &&
+    Math.abs(yRight) < 1e12;
+  construction.style.display = showConstruction ? "" : "none";
+  if (showConstruction) {
+    construction.setAttribute("x1", 50);
+    construction.setAttribute("x2", 750);
+    construction.setAttribute("y1", yLeft);
+    construction.setAttribute("y2", yRight);
+  }
+  $("plot-note").textContent =
+    row && !visible
+      ? "Current iterate is outside the plot range."
+      : showConstruction
+        ? run.method === "secant"
+          ? "Secant through current and previous iterates"
+          : "Tangent at the inspected iterate"
+        : "";
 }
 function render() {
   const run = report.runs.find((r) => r.method === method);
@@ -106,7 +164,7 @@ function change(input) {
   step = 0;
   form();
   render();
-  $("message").textContent = "";
+  message("");
 }
 $("preset").onchange = () => change(presets[$("preset").value]);
 $("method").onchange = () => {
@@ -132,9 +190,9 @@ $("settings").onsubmit = (e) => {
     ])
       input[k] = Number($(k).value);
     change(input);
-    $("message").textContent = "All four methods recalculated.";
+    message("All four methods recalculated.");
   } catch (error) {
-    $("message").textContent = error.message;
+    message(error.message);
   }
 };
 function move(x) {
@@ -212,12 +270,18 @@ $("file").onchange = async () => {
     if (!file) return;
     if (file.size > 20000) throw Error("Study files must be under 20 KB.");
     change(JSON.parse(await file.text()));
-    $("message").textContent = "Study imported and all methods recomputed.";
+    message("Study imported and all methods recomputed.");
   } catch (error) {
-    $("message").textContent = error.message;
+    message(error.message);
   } finally {
     $("file").value = "";
   }
 };
 form();
 render();
+
+$("settings-open").onclick = () => {
+  stop();
+  $("settings-dialog").showModal();
+};
+$("settings-close").onclick = () => $("settings-dialog").close();

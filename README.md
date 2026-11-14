@@ -27,7 +27,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 - **An even-multiplicity root:** (x−1)² has a root without an endpoint sign change. Bracketed methods reject this interval rather than falsely claim no root exists.
 - **A nearly flat start:** x⁸−1 illustrates the consequence of dividing by a small derivative.
 
-Edit coefficients, endpoints, starting value, tolerances and the update budget. Export a reproducible study or complete JSON/CSV traces. The interface includes keyboard replay, a function plot, outcome comparison, derivative values, bracket widths and explicit failure explanations. No runtime network requests, accounts or analytics.
+Edit coefficients, endpoints, starting value, tolerances and the update budget. Export a reproducible study or complete JSON/CSV traces. The interface includes keyboard replay, an animated function plot, tangent/secant construction lines, outcome comparison, derivative values, bracket widths and explicit failure explanations. Open **Parameters** to edit a study. Marker and bracket transitions respect reduced-motion preferences. No runtime network requests, accounts or analytics.
 
 ## Algorithms and numerical contract
 

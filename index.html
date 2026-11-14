@@ -3,26 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Root Register — Numerical field notes</title>
+    <title>Root Register</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <header>
-      <strong>r/r</strong><span>NUMERICAL FIELD NOTES — 053</span
+      <h1>Root Register</h1>
+      <button id="settings-open">Parameters</button
       ><button id="export">Export evidence ↗</button>
     </header>
     <main>
-      <section class="intro">
-        <p>FINDING ZERO</p>
-        <h1>Close is a<br />measurable thing.</h1>
-        <div>
-          <h2>Root Register</h2>
-          <p>
-            Four methods. One polynomial.<br />Follow the steps—and the
-            assumptions.
-          </p>
-        </div>
-      </section>
       <section class="controls">
         <label
           >Study<select id="preset">
@@ -75,6 +65,7 @@
         </section>
         <aside>
           <p class="eyebrow" id="method-name"></p>
+          <p class="outcome-label">Complete run outcome</p>
           <h2 id="status"></h2>
           <p id="reason"></p>
           <dl id="metrics"></dl>
@@ -83,7 +74,7 @@
       </div>
       <section>
         <div class="plot-title">
-          <h2>Compare the outcomes</h2>
+          <h2>Method comparison</h2>
           <span>Same polynomial, independent runs</span>
         </div>
         <div class="table-wrap">
@@ -102,7 +93,55 @@
         </div>
       </section>
       <details>
-        <summary>Change the experiment</summary>
+        <summary>Iteration ledger</summary>
+        <button id="csv">Download traces CSV</button>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Row</th>
+                <th>x</th>
+                <th>f(x)</th>
+                <th>Derivative</th>
+                <th>Δx</th>
+                <th>Step</th>
+              </tr>
+            </thead>
+            <tbody id="ledger"></tbody>
+          </table>
+        </div>
+      </details>
+      <details>
+        <summary>Reading the evidence</summary>
+        <p>
+          Bisection and safeguarded Newton require opposite endpoint signs
+          unless an endpoint evaluates to zero. A polynomial is continuous, but
+          floating-point cancellation can make computed signs unreliable. This
+          tool does not use interval arithmetic and does not certify every root.
+        </p>
+        <p>
+          A small residual does not bound the distance to a root, especially
+          near a flat or repeated root. Bracket termination returns the
+          midpoint. Newton can diverge or cycle; secant can encounter equal
+          function values. Safeguarded Newton accepts a Newton proposal only in
+          the inner 80% of the current bracket, otherwise bisecting. It is not
+          Brent's method.
+        </p>
+        <p>
+          Coefficients are constant first, degree 1–8, bounded by one million.
+          Input x values are within ±1000; numerical excursions beyond ±10¹²
+          stop the affected method. The update budget is at most 200. Data stays
+          in your browser unless exported.
+        </p>
+      </details>
+    </main>
+    <dialog id="settings-dialog" aria-labelledby="settings-heading">
+      <div class="dialog-head">
+        <h2 id="settings-heading">Parameters</h2>
+        <button id="settings-close">Close</button>
+      </div>
+      <p id="settings-status" role="status"></p>
+      <section>
         <form id="settings">
           <label class="wide"
             >Coefficients, constant first<input
@@ -158,53 +197,8 @@
               required /></label
           ><button type="submit">Recalculate all methods</button>
         </form>
-      </details>
-      <details>
-        <summary>Iteration ledger</summary>
-        <button id="csv">Download traces CSV</button>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Row</th>
-                <th>x</th>
-                <th>f(x)</th>
-                <th>Derivative</th>
-                <th>Δx</th>
-                <th>Step</th>
-              </tr>
-            </thead>
-            <tbody id="ledger"></tbody>
-          </table>
-        </div>
-      </details>
-      <details>
-        <summary>Reading the evidence</summary>
-        <p>
-          Bisection and safeguarded Newton require opposite endpoint signs
-          unless an endpoint evaluates to zero. A polynomial is continuous, but
-          floating-point cancellation can make computed signs unreliable. This
-          tool does not use interval arithmetic and does not certify every root.
-        </p>
-        <p>
-          A small residual does not bound the distance to a root, especially
-          near a flat or repeated root. Bracket termination returns the
-          midpoint. Newton can diverge or cycle; secant can encounter equal
-          function values. Safeguarded Newton accepts a Newton proposal only in
-          the inner 80% of the current bracket, otherwise bisecting. It is not
-          Brent's method.
-        </p>
-        <p>
-          Coefficients are constant first, degree 1–8, bounded by one million.
-          Input x values are within ±1000; numerical excursions beyond ±10¹²
-          stop the affected method. The update budget is at most 200. Data stays
-          in your browser unless exported.
-        </p>
-      </details>
-      <footer>
-        <span>ROOT REGISTER</span><span>Small steps, explicit evidence.</span>
-      </footer>
-    </main>
+      </section>
+    </dialog>
     <script type="module" src="app.js"></script>
   </body>
 </html>
